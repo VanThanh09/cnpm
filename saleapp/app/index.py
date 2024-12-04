@@ -1,7 +1,7 @@
 import math
 
-from flask import render_template, request, redirect
-import dao
+from flask import render_template, request, redirect, jsonify, session
+import dao, utils
 from app import app, login
 from flask_login import login_user, logout_user
 
@@ -58,6 +58,30 @@ def register_process():
 
     return render_template('register.html', err_msg=err_msg)
 
+
+@app.route('/api/carts', methods=['post'])
+def add_to_cart():
+    cart = session.get('cart')
+    if not cart:
+        cart = {}
+
+    id = str(request.json.get('id'))
+    name = request.json.get('name')
+    price = request.json.get('price')
+
+    if id in cart:
+        cart[id]["quantity"] += 1
+    else:
+        cart[id] = {
+            'id': id,
+            'name': name,
+            'price': price,
+            'quantity': 1
+        }
+    session['cart'] = cart
+    print(cart)
+
+    return jsonify(utils.stats_cart(cart=cart))
 
 @login.user_loader
 def get_user_by_id(user_id):
